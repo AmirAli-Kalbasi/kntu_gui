@@ -270,20 +270,20 @@ class MainWindow(QtWidgets.QMainWindow):
         preds = model.predict(X_test)
         data["pred"] = preds
 
-        predictions = {}
-        for folder_name, group in data.groupby("folder"):
-            label = "fault" if group["pred"].sum() > len(group) / 2 else "normal"
-            predictions[folder_name] = label
+        file_predictions = []
+        for (folder_name, file_name), group in data.groupby(["folder", "source_file"]):
+            label = "fault" if group["pred"].mean() >= 0.5 else "normal"
+            file_predictions.append((folder_name, file_name, label))
 
         html = [
-            "<h3>Test Folder Predictions</h3>",
+            "<h3>Test File Predictions</h3>",
             "<table border='1' cellspacing='0' cellpadding='3'>",
-            "<tr><th>Folder</th><th>Predicted Label</th></tr>",
+            "<tr><th>Folder</th><th>File</th><th>Predicted Label</th></tr>",
         ]
-        for folder, label in predictions.items():
+        for folder, file, label in file_predictions:
             color = "red" if label == "fault" else "green"
             html.append(
-                f"<tr><td>{folder}</td><td style='color:{color}'><b>{label}</b></td></tr>"
+                f"<tr><td>{folder}</td><td>{file}</td><td style='color:{color}'><b>{label}</b></td></tr>"
             )
         html.append("</table>")
         self.results.append("".join(html))
