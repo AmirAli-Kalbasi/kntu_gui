@@ -13,7 +13,8 @@ from sklearn.ensemble import (
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
@@ -103,6 +104,18 @@ param_grids = {
         "clf__learning_rate": [0.01, 0.1, 0.2],
     },
 }
+
+
+def plot_confusion(cm, model_name):
+    """Return a matplotlib Figure showing the confusion matrix."""
+    disp = ConfusionMatrixDisplay(
+        confusion_matrix=cm, display_labels=["Normal", "Fault"]
+    )
+    disp.plot(cmap="Blues", colorbar=False)
+    plt.title(f"{model_name} Confusion Matrix")
+    return disp.figure_
+
+
 class MainWindow(QtWidgets.QMainWindow):
     """Main application window with placeholders for ML workflow."""
 
@@ -208,5 +221,5 @@ class MainWindow(QtWidgets.QMainWindow):
 
         preds = grid.predict(X)
         cm = confusion_matrix(y, preds)
-        self.results.append("Confusion Matrix:")
-        self.results.append(str(cm))
+        plot_confusion(cm, model_name)
+        plt.show()
