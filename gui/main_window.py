@@ -1,5 +1,7 @@
 from PyQt5 import QtWidgets
 
+from models import load_and_label_data
+
 class MainWindow(QtWidgets.QMainWindow):
     """Main application window with placeholders for ML workflow."""
 
@@ -7,6 +9,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setWindowTitle("KNTU ML Trainer")
         self.resize(600, 400)
+        self.dataset_counts = None
         self._init_ui()
 
     def _init_ui(self):
@@ -52,6 +55,11 @@ class MainWindow(QtWidgets.QMainWindow):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Train Folder")
         if folder:
             self.train_edit.setText(folder)
+            _, counts = load_and_label_data(folder, verbose=False)
+            self.dataset_counts = counts
+            self.results.append(
+                f"Loaded {counts['normal']} normal files and {counts['fault']} fault files."
+            )
 
     def select_test_folder(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Test Folder")

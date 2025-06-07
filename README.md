@@ -21,10 +21,11 @@ metrics are intentionally left as placeholders so the team can extend them later
 ## Loading Dataset
 
 The `models` package includes a helper function `load_and_label_data` that
-collects training data from folders named `Positive` and `Negative` inside a
-given directory. Data in `Positive` is labeled as *fault* while data in
-`Negative` is labeled as *normal*. The function returns both the loaded
-``pandas.DataFrame`` and a dictionary with counts of normal and fault files.
+collects training data from folders named `Positive` and `Negative` (or the
+alternative `fault`/`normal`) inside a given directory. Data in the fault
+folders is labeled as *fault* while data in the normal folders is labeled as
+*normal*. The function returns both the loaded ``pandas.DataFrame`` and a
+dictionary with counts of normal and fault files.
 When ``verbose`` is ``True`` these counts are logged using Python's
 ``logging`` module and displayed in the GUI after selecting the training folder.
 
