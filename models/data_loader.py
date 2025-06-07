@@ -3,8 +3,8 @@ import pandas as pd
 import scipy.io
 
 
-def load_and_label_data(base_path):
-    """Load .mat files from Positive and Negative subfolders.
+def load_and_label_data(base_path, verbose=True):
+    """Load ``.mat`` files from Positive and Negative subfolders.
 
     The function expects two directories inside ``base_path`` named
     ``Positive`` and ``Negative``. Files found under ``Positive`` are labeled
@@ -17,8 +17,9 @@ def load_and_label_data(base_path):
 
     Returns
     -------
-    pandas.DataFrame
-        Combined data from all files with a ``label`` column.
+    tuple[pandas.DataFrame, dict]
+        Combined data from all files with a ``label`` column and a dictionary
+        with counts of ``fault`` and ``normal`` files.
     """
     data_frames = []
     counts = {"fault": 0, "normal": 0}
@@ -57,5 +58,10 @@ def load_and_label_data(base_path):
     else:
         combined = pd.DataFrame()
 
-    print(f"Loaded {counts['normal']} normal files and {counts['fault']} fault files.")
-    return combined
+    if verbose:
+        print(
+            f"Loaded {counts['normal']} normal files "
+            f"and {counts['fault']} fault files."
+        )
+
+    return combined, counts

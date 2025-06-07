@@ -1,5 +1,7 @@
 from PyQt5 import QtWidgets
 
+from models import load_and_label_data
+
 class MainWindow(QtWidgets.QMainWindow):
     """Main application window with placeholders for ML workflow."""
 
@@ -49,8 +51,19 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.results)
 
     def select_train_folder(self):
-        folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Train Folder")
+        folder = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Select Train Folder"
+        )
         if folder:
+            data, counts = load_and_label_data(folder, verbose=False)
+            self.train_data = data
+            message = (
+                f"{counts['normal']} normal files and "
+                f"{counts['fault']} fault files detected."
+            )
+            QtWidgets.QMessageBox.information(
+                self, "Training Data Loaded", message
+            )
             self.train_edit.setText(folder)
 
     def select_test_folder(self):
