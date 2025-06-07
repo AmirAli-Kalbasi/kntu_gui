@@ -7,30 +7,30 @@ logger = logging.getLogger(__name__)
 
 
 def load_and_label_data(base_path, verbose=True):
-"""Load ``.mat`` files from subfolders containing normal and fault data.
-
-    By default the function looks for ``Positive``/``Negative`` folders but it
-    also accepts the more explicit ``fault``/``normal`` naming. Any of these
-    directories will be processed if present within ``base_path``. Files found
-    under a fault folder are labeled as faults and files found under a normal
-    folder are labeled as normal.
-
-    Parameters
-    ----------
-    base_path : str
-        Path containing the ``Positive`` and ``Negative`` folders.
-
-    Returns
-    -------
-    tuple[pandas.DataFrame, dict]
-        Combined data from all files with a ``label`` column and a dictionary
-        with counts of ``fault`` and ``normal`` files.
-
-    Notes
-    -----
-    Set ``verbose`` to ``True`` to log a summary of loaded files using the
-    standard ``logging`` module.
-    """
+    """Load ``.mat`` files from subfolders containing normal and fault data.
+    
+        By default the function looks for ``Positive``/``Negative`` folders but it
+        also accepts the more explicit ``fault``/``normal`` naming. Any of these
+        directories will be processed if present within ``base_path``. Files found
+        under a fault folder are labeled as faults and files found under a normal
+        folder are labeled as normal.
+    
+        Parameters
+        ----------
+        base_path : str
+            Path containing the ``Positive`` and ``Negative`` folders.
+    
+        Returns
+        -------
+        tuple[pandas.DataFrame, dict]
+            Combined data from all files with a ``label`` column and a dictionary
+            with counts of ``fault`` and ``normal`` files.
+    
+        Notes
+        -----
+        Set ``verbose`` to ``True`` to log a summary of loaded files using the
+        standard ``logging`` module.
+        """
     data_frames = []
     counts = {"fault": 0, "normal": 0}
 
