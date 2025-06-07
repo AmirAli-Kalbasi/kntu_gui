@@ -4,6 +4,7 @@ This project provides a simple PyQt based GUI skeleton for machine learning work
 The interface allows users to select training and test folders, choose a model type
 (CatBoost or Decision Tree for now) and load a pretrained model. Training logic and
 metrics are intentionally left as placeholders so the team can extend them later.
+The GUI applies a dark theme for a more modern appearance.
 
 ## Structure
 
