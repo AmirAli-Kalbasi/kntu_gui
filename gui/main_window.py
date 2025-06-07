@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 
 from models import load_and_label_data
 
@@ -13,6 +13,7 @@ from sklearn.ensemble import (
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import confusion_matrix
 
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
@@ -190,8 +191,22 @@ class MainWindow(QtWidgets.QMainWindow):
         params = param_grids[model_name]
 
         self.results.append(f"Running grid search for {model_name}...")
+
+        progress = QtWidgets.QProgressDialog("Training...", None, 0, 0, self)
+        progress.setWindowModality(QtCore.Qt.ApplicationModal)
+        progress.setCancelButton(None)
+        progress.show()
+        QtWidgets.QApplication.processEvents()
+
         grid = GridSearchCV(pipeline, params, cv=3, n_jobs=-1)
         grid.fit(X, y)
 
+        progress.close()
+
         self.results.append(f"Best score: {grid.best_score_:.3f}")
         self.results.append(f"Best params: {grid.best_params_}")
+
+        preds = grid.predict(X)
+        cm = confusion_matrix(y, preds)
+        self.results.append("Confusion Matrix:")
+        self.results.append(str(cm))
