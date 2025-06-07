@@ -29,6 +29,11 @@ dictionary with counts of normal and fault files.
 When ``verbose`` is ``True`` these counts are logged using Python's
 ``logging`` module and displayed in the GUI after selecting the training folder.
 
+After each training run the confusion matrix is displayed in a modal window.
+The window includes the standard matplotlib toolbar allowing the image to be
+saved directly from the interface when a graphical backend is available.  When
+running without a display, the matrix is written to ``confusion_matrix.png``.
+
 ## Running
 
 Install dependencies and start the GUI:

@@ -165,6 +165,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.results.setReadOnly(True)
         layout.addWidget(self.results)
 
+    def _display_figure(self, fig):
+        """Show a matplotlib figure in a modal dialog with save option."""
+        from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
+
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Confusion Matrix")
+        layout = QtWidgets.QVBoxLayout(dialog)
+
+        canvas = FigureCanvasQTAgg(fig)
+        toolbar = NavigationToolbar2QT(canvas, dialog)
+
+        layout.addWidget(toolbar)
+        layout.addWidget(canvas)
+        dialog.resize(600, 500)
+        dialog.exec_()
+
     def select_train_folder(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Train Folder")
         if folder:
@@ -225,7 +241,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if "agg" not in plt.get_backend().lower():
             plt.show()
         else:
-            fig.savefig("confusion_matrix.png")
-            self.results.append(
-                "Confusion matrix saved to confusion_matrix.png (non-interactive backend)."
-            )
+            if QtWidgets.QApplication.instance() is not None:
+                self._display_figure(fig)
+            else:
+                fig.savefig("confusion_matrix.png")
+                self.results.append(
+                    "Confusion matrix saved to confusion_matrix.png (non-interactive backend)."
+                )
