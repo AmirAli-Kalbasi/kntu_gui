@@ -7,11 +7,13 @@ logger = logging.getLogger(__name__)
 
 
 def load_and_label_data(base_path, verbose=True):
-    """Load ``.mat`` files from Positive and Negative subfolders.
+"""Load ``.mat`` files from subfolders containing normal and fault data.
 
-    The function expects two directories inside ``base_path`` named
-    ``Positive`` and ``Negative``. Files found under ``Positive`` are labeled
-    as faults and files found under ``Negative`` are labeled as normal.
+    By default the function looks for ``Positive``/``Negative`` folders but it
+    also accepts the more explicit ``fault``/``normal`` naming. Any of these
+    directories will be processed if present within ``base_path``. Files found
+    under a fault folder are labeled as faults and files found under a normal
+    folder are labeled as normal.
 
     Parameters
     ----------
@@ -32,12 +34,19 @@ def load_and_label_data(base_path, verbose=True):
     data_frames = []
     counts = {"fault": 0, "normal": 0}
 
-    for subfolder in ["Positive", "Negative"]:
+    for subfolder in os.listdir(base_path):
         folder_path = os.path.join(base_path, subfolder)
         if not os.path.isdir(folder_path):
             continue
 
-        label = "fault" if subfolder == "Positive" else "normal"
+        name = subfolder.lower()
+        if name in {"positive", "fault"}:
+            label = "fault"
+        elif name in {"negative", "normal"}:
+            label = "normal"
+        else:
+            continue
+
         for file in os.listdir(folder_path):
             if file.endswith(".mat"):
                 file_path = os.path.join(folder_path, file)
