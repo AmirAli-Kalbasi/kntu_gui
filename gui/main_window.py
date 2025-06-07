@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
 
 from models import load_and_label_data, load_test_data
+from features import extract_features
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -150,6 +151,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_combo.addItems(classifiers.keys())
         layout.addWidget(self.model_combo)
 
+        # Feature selection
+        feature_group = QtWidgets.QGroupBox("Feature Categories")
+        feature_layout = QtWidgets.QVBoxLayout()
+        self.time_cb = QtWidgets.QCheckBox("Time")
+        self.freq_cb = QtWidgets.QCheckBox("Frequency")
+        self.wave_cb = QtWidgets.QCheckBox("Time-Frequency")
+        feature_layout.addWidget(self.time_cb)
+        feature_layout.addWidget(self.freq_cb)
+        feature_layout.addWidget(self.wave_cb)
+        feature_group.setLayout(feature_layout)
+        layout.addWidget(feature_group)
+
         # Pretrained model load
         load_model_btn = QtWidgets.QPushButton("Load Pretrained Model")
         load_model_btn.clicked.connect(self.load_model)
@@ -212,8 +225,21 @@ class MainWindow(QtWidgets.QMainWindow):
             self.results.append("No training data found.")
             return
 
-        X = data.drop(columns=["label", "source_file"])
-        y = data["label"].map({"normal": 0, "fault": 1})
+        feature_list = []
+        if self.time_cb.isChecked():
+            feature_list.append("time_domain")
+        if self.freq_cb.isChecked():
+            feature_list.append("freq_domain")
+        if self.wave_cb.isChecked():
+            feature_list.append("wavelet")
+
+        if feature_list:
+            feats = extract_features(data, feature_list)
+            X = feats.drop(columns=["label", "source_file", "folder"], errors="ignore")
+            y = feats["label"].map({"normal": 0, "fault": 1})
+        else:
+            X = data.drop(columns=["label", "source_file", "folder"], errors="ignore")
+            y = data["label"].map({"normal": 0, "fault": 1})
 
         model_name = self.model_combo.currentText()
         pipeline = classifiers[model_name]
@@ -261,19 +287,39 @@ class MainWindow(QtWidgets.QMainWindow):
         if data.empty:
             self.results.append("No test data found.")
             return
+        feature_list = []
+        if self.time_cb.isChecked():
+            feature_list.append("time_domain")
+        if self.freq_cb.isChecked():
+            feature_list.append("freq_domain")
+        if self.wave_cb.isChecked():
+            feature_list.append("wavelet")
 
-        drop_cols = ["folder", "source_file"]
-        if "label" in data.columns:
-            drop_cols.append("label")
+        if feature_list:
+            feats = extract_features(data, feature_list)
+            X_test = feats.drop(columns=["label", "source_file", "folder"], errors="ignore")
+            preds = model.predict(X_test)
+            feats["pred"] = preds
+            file_predictions = []
+            for _, row in feats.iterrows():
+                folder = row.get("folder", "")
+                label = "fault" if row["pred"] == 1 else "normal"
+                file_predictions.append((folder, row["source_file"], label))
+            data_for_cm = feats
+        else:
+            drop_cols = ["folder", "source_file"]
+            if "label" in data.columns:
+                drop_cols.append("label")
 
-        X_test = data.drop(columns=drop_cols)
-        preds = model.predict(X_test)
-        data["pred"] = preds
+            X_test = data.drop(columns=drop_cols)
+            preds = model.predict(X_test)
+            data["pred"] = preds
 
-        file_predictions = []
-        for (folder_name, file_name), group in data.groupby(["folder", "source_file"]):
-            label = "fault" if group["pred"].mean() >= 0.5 else "normal"
-            file_predictions.append((folder_name, file_name, label))
+            file_predictions = []
+            for (folder_name, file_name), group in data.groupby(["folder", "source_file"]):
+                label = "fault" if group["pred"].mean() >= 0.5 else "normal"
+                file_predictions.append((folder_name, file_name, label))
+            data_for_cm = data
 
         html = [
             "<h3>Test File Predictions</h3>",
@@ -289,9 +335,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.results.append("".join(html))
 
         # If the test data included labels, show a confusion matrix
-        if "label" in data.columns and data["label"].notna().any():
-            y_true = data["label"].map({"normal": 0, "fault": 1})
-            cm = confusion_matrix(y_true, data["pred"])
+        if "label" in data_for_cm.columns and data_for_cm["label"].notna().any():
+            y_true = data_for_cm["label"].map({"normal": 0, "fault": 1})
+            cm = confusion_matrix(y_true, data_for_cm["pred"])
             fig = plot_confusion(cm, "Test Data")
             if "agg" not in plt.get_backend().lower():
                 plt.show()
