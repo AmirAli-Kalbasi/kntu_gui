@@ -3,6 +3,10 @@ from PyQt5 import QtWidgets, QtCore
 from models import load_and_label_data, load_test_data
 from features import extract_features
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
@@ -320,6 +324,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 label = "fault" if group["pred"].mean() >= 0.5 else "normal"
                 file_predictions.append((folder_name, file_name, label))
             data_for_cm = data
+
+        for folder, file, label in file_predictions:
+            logger.debug("Predicted %s for %s/%s", label, folder, file)
+        labels = [lbl for _, _, lbl in file_predictions]
+        logger.info(
+            "Prediction summary - normal: %s, fault: %s",
+            labels.count("normal"),
+            labels.count("fault"),
+        )
 
         html = [
             "<h3>Test File Predictions</h3>",
