@@ -6,9 +6,10 @@ from gui.main_window import MainWindow
 
 def main():
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(levelname)s:%(name)s:%(message)s",
     )
+    logging.getLogger("gui").setLevel(logging.DEBUG)
     app = QtWidgets.QApplication([])
     window = MainWindow()
     window.show()
