@@ -18,6 +18,17 @@ metrics are intentionally left as placeholders so the team can extend them later
 └── .gitignore
 ```
 
+## Loading Dataset
+
+The `models` package includes a helper function `load_and_label_data` that
+collects training data from folders named `Positive` and `Negative` inside a
+given directory. Data in `Positive` is labeled as *fault* while data in
+`Negative` is labeled as *normal*. The function returns both the loaded
+``pandas.DataFrame`` and a dictionary with counts of normal and fault files.
+The GUI uses these counts to display a confirmation message after the training
+folder is selected. When ``verbose`` is ``True`` the helper reports these
+counts using Python's ``logging`` module.
+
 ## Running
 
 Install dependencies and start the GUI:
