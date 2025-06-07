@@ -221,5 +221,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         preds = grid.predict(X)
         cm = confusion_matrix(y, preds)
-        plot_confusion(cm, model_name)
-        plt.show()
+        fig = plot_confusion(cm, model_name)
+        if "agg" not in plt.get_backend().lower():
+            plt.show()
+        else:
+            fig.savefig("confusion_matrix.png")
+            self.results.append(
+                "Confusion matrix saved to confusion_matrix.png (non-interactive backend)."
+            )
