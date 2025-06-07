@@ -2,8 +2,8 @@
 
 This project provides a simple PyQt based GUI skeleton for machine learning workflows.
 The interface allows users to select training and test folders, choose a model type
-(CatBoost or Decision Tree for now) and load a pretrained model. Training logic and
-metrics are intentionally left as placeholders so the team can extend them later.
+from a list of common classifiers and load a pretrained model. Training logic now
+includes a basic grid search to tune hyperparameters for the selected model.
 
 ## Structure
 

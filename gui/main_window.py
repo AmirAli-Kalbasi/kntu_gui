@@ -2,6 +2,106 @@ from PyQt5 import QtWidgets
 
 from models import load_and_label_data
 
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import (
+    RandomForestClassifier,
+    AdaBoostClassifier,
+    GradientBoostingClassifier,
+)
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
+from sklearn.model_selection import GridSearchCV
+
+from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
+from catboost import CatBoostClassifier
+
+classifiers = {
+    "DecisionTree": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", DecisionTreeClassifier(random_state=42)),
+    ]),
+    "RandomForest": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", RandomForestClassifier(random_state=42)),
+    ]),
+    "AdaBoost": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", AdaBoostClassifier(random_state=42)),
+    ]),
+    "MLP": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", MLPClassifier(random_state=42, max_iter=500)),
+    ]),
+    "SVM": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", SVC(probability=True, random_state=42)),
+    ]),
+    "GradientBoosting": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", GradientBoostingClassifier(random_state=42)),
+    ]),
+    "XGBoost": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", XGBClassifier(use_label_encoder=False, eval_metric="logloss", random_state=42)),
+    ]),
+    "LightGBM": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", LGBMClassifier(random_state=42)),
+    ]),
+    "CatBoost": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", CatBoostClassifier(verbose=0, random_state=42)),
+    ]),
+}
+
+param_grids = {
+    "DecisionTree": {
+        "clf__max_depth": [3, 5, 10, None],
+        "clf__min_samples_split": [2, 5, 10],
+    },
+    "RandomForest": {
+        "clf__n_estimators": [50, 100, 200],
+        "clf__max_depth": [3, 5, 10, None],
+        "clf__min_samples_split": [2, 5, 10],
+    },
+    "AdaBoost": {
+        "clf__n_estimators": [50, 100, 200],
+        "clf__learning_rate": [0.01, 0.1, 1.0],
+    },
+    "MLP": {
+        "clf__hidden_layer_sizes": [(50,), (100,), (50, 50)],
+        "clf__activation": ["relu", "tanh"],
+        "clf__alpha": [0.0001, 0.001, 0.01],
+    },
+    "SVM": {
+        "clf__C": [0.1, 1, 10],
+        "clf__kernel": ["linear", "rbf"],
+        "clf__gamma": ["scale", "auto"],
+    },
+    "GradientBoosting": {
+        "clf__n_estimators": [100, 200],
+        "clf__learning_rate": [0.01, 0.1, 0.2],
+        "clf__max_depth": [3, 5, 7],
+    },
+    "XGBoost": {
+        "clf__n_estimators": [50, 100, 200],
+        "clf__max_depth": [3, 5, 7],
+        "clf__learning_rate": [0.01, 0.1, 0.2],
+    },
+    "LightGBM": {
+        "clf__n_estimators": [50, 100, 200],
+        "clf__max_depth": [3, 5, 7],
+        "clf__learning_rate": [0.01, 0.1, 0.2],
+    },
+    "CatBoost": {
+        "clf__iterations": [50, 100, 200],
+        "clf__depth": [3, 5, 7],
+        "clf__learning_rate": [0.01, 0.1, 0.2],
+    },
+}
 class MainWindow(QtWidgets.QMainWindow):
     """Main application window with placeholders for ML workflow."""
 
@@ -33,7 +133,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Model selection
         self.model_combo = QtWidgets.QComboBox()
-        self.model_combo.addItems(["CatBoost", "Decision Tree"])
+        self.model_combo.addItems(classifiers.keys())
         layout.addWidget(self.model_combo)
 
         # Pretrained model load
@@ -72,5 +172,26 @@ class MainWindow(QtWidgets.QMainWindow):
             self.results.append(f"Loaded model: {path}")
 
     def train_model(self):
-        # Placeholder for training logic
-        self.results.append("Training not implemented yet.")
+        train_folder = self.train_edit.text()
+        if not train_folder:
+            self.results.append("Please select a train folder.")
+            return
+
+        data, _ = load_and_label_data(train_folder, verbose=False)
+        if data.empty:
+            self.results.append("No training data found.")
+            return
+
+        X = data.drop(columns=["label", "source_file"])
+        y = data["label"].map({"normal": 0, "fault": 1})
+
+        model_name = self.model_combo.currentText()
+        pipeline = classifiers[model_name]
+        params = param_grids[model_name]
+
+        self.results.append(f"Running grid search for {model_name}...")
+        grid = GridSearchCV(pipeline, params, cv=3, n_jobs=-1)
+        grid.fit(X, y)
+
+        self.results.append(f"Best score: {grid.best_score_:.3f}")
+        self.results.append(f"Best params: {grid.best_params_}")

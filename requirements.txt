@@ -1,3 +1,7 @@
 PyQt5>=5.15
 pandas
 scipy
+scikit-learn
+xgboost
+lightgbm
+catboost
