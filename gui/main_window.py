@@ -262,11 +262,17 @@ class MainWindow(QtWidgets.QMainWindow):
             self.results.append("No test data found.")
             return
 
+        drop_cols = ["folder", "source_file"]
+        if "label" in data.columns:
+            drop_cols.append("label")
+
+        X_test = data.drop(columns=drop_cols)
+        preds = model.predict(X_test)
+        data["pred"] = preds
+
         predictions = {}
         for folder_name, group in data.groupby("folder"):
-            X_test = group.drop(columns=["folder", "source_file"])
-            preds = model.predict(X_test)
-            label = "fault" if preds.sum() > len(preds) / 2 else "normal"
+            label = "fault" if group["pred"].sum() > len(group) / 2 else "normal"
             predictions[folder_name] = label
 
         html = [
@@ -281,3 +287,19 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         html.append("</table>")
         self.results.append("".join(html))
+
+        # If the test data included labels, show a confusion matrix
+        if "label" in data.columns and data["label"].notna().any():
+            y_true = data["label"].map({"normal": 0, "fault": 1})
+            cm = confusion_matrix(y_true, data["pred"])
+            fig = plot_confusion(cm, "Test Data")
+            if "agg" not in plt.get_backend().lower():
+                plt.show()
+            else:
+                if QtWidgets.QApplication.instance() is not None:
+                    self._display_figure(fig)
+                else:
+                    fig.savefig("test_confusion_matrix.png")
+                    self.results.append(
+                        "Test confusion matrix saved to test_confusion_matrix.png (non-interactive backend)."
+                    )
