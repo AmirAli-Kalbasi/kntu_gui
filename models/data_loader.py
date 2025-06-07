@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_and_label_data(base_path, verbose=True):
-"""Load ``.mat`` files from subfolders containing normal and fault data.
+    """Load ``.mat`` files from subfolders containing normal and fault data.
 
     By default the function looks for ``Positive``/``Negative`` folders but it
     also accepts the more explicit ``fault``/``normal`` naming. Any of these
