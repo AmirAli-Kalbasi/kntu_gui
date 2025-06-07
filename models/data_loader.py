@@ -83,3 +83,39 @@ def load_and_label_data(base_path, verbose=True):
         )
 
     return combined, counts
+
+
+def load_test_data(base_path):
+    """Load ``.mat`` files from subfolders without assigning labels."""
+    data_frames = []
+
+    for subfolder in os.listdir(base_path):
+        folder_path = os.path.join(base_path, subfolder)
+        if not os.path.isdir(folder_path):
+            continue
+
+        for file in os.listdir(folder_path):
+            if file.endswith(".mat"):
+                file_path = os.path.join(folder_path, file)
+                mat_data = scipy.io.loadmat(file_path)
+
+                data_array = mat_data["dataset"]
+                df = pd.DataFrame(
+                    data_array,
+                    columns=[
+                        "sample_num",
+                        "Acc_X",
+                        "Acc_Y",
+                        "Acc_Z",
+                        "Gyro_X",
+                        "Gyro_Y",
+                        "Gyro_Z",
+                    ],
+                )
+                df["folder"] = subfolder
+                df["source_file"] = file
+                data_frames.append(df)
+
+    if data_frames:
+        return pd.concat(data_frames, ignore_index=True)
+    return pd.DataFrame()
