@@ -86,17 +86,55 @@ def load_and_label_data(base_path, verbose=True):
 
 
 def load_test_data(base_path):
-    """Load ``.mat`` files from subfolders without assigning labels."""
+    """Load ``.mat`` files for testing.
+
+    Files can either be placed directly in ``base_path`` or inside
+    subfolders.  When folders named ``fault``/``normal`` (or their
+    ``Positive``/``Negative`` variants) are present, the returned data will
+    include a ``label`` column allowing a confusion matrix to be
+    computed.
+    """
+
     data_frames = []
 
-    for subfolder in os.listdir(base_path):
-        folder_path = os.path.join(base_path, subfolder)
-        if not os.path.isdir(folder_path):
+    for entry in os.listdir(base_path):
+        path = os.path.join(base_path, entry)
+
+        # Handle files placed directly in the base path
+        if os.path.isfile(path) and entry.endswith(".mat"):
+            mat_data = scipy.io.loadmat(path)
+            data_array = mat_data["dataset"]
+            df = pd.DataFrame(
+                data_array,
+                columns=[
+                    "sample_num",
+                    "Acc_X",
+                    "Acc_Y",
+                    "Acc_Z",
+                    "Gyro_X",
+                    "Gyro_Y",
+                    "Gyro_Z",
+                ],
+            )
+            df["folder"] = os.path.basename(base_path)
+            df["source_file"] = entry
+            data_frames.append(df)
             continue
 
-        for file in os.listdir(folder_path):
+        # Skip non-directories after handling direct files
+        if not os.path.isdir(path):
+            continue
+
+        name = entry.lower()
+        label = None
+        if name in {"positive", "fault"}:
+            label = "fault"
+        elif name in {"negative", "normal"}:
+            label = "normal"
+
+        for file in os.listdir(path):
             if file.endswith(".mat"):
-                file_path = os.path.join(folder_path, file)
+                file_path = os.path.join(path, file)
                 mat_data = scipy.io.loadmat(file_path)
 
                 data_array = mat_data["dataset"]
@@ -112,8 +150,10 @@ def load_test_data(base_path):
                         "Gyro_Z",
                     ],
                 )
-                df["folder"] = subfolder
+                df["folder"] = entry
                 df["source_file"] = file
+                if label is not None:
+                    df["label"] = label
                 data_frames.append(df)
 
     if data_frames:

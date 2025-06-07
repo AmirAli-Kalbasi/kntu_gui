@@ -34,9 +34,12 @@ The window includes the standard matplotlib toolbar allowing the image to be
 saved directly from the interface when a graphical backend is available.  When
 running without a display, the matrix is written to ``confusion_matrix.png``.
 
-When a test folder is selected, each subfolder of unlabeled ``.mat`` files is
-predicted after training. The results are shown in the GUI as a small table with
-the folder name and the assigned label.
+When a test folder is selected, ``.mat`` files can either be placed directly in
+the directory or organised into subfolders.  If folders named
+``normal``/``fault`` (or their ``Negative``/``Positive`` variants) are
+present, the files are treated as labeled and a confusion matrix for the test
+data is displayed.  Otherwise each folder is predicted and the assigned label is
+listed in a small table.
 
 ## Running
 
