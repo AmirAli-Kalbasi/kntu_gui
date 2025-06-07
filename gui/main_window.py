@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 
-from models import load_and_label_data
+from models import load_and_label_data, load_test_data
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -248,3 +248,36 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.results.append(
                     "Confusion matrix saved to confusion_matrix.png (non-interactive backend)."
                 )
+
+        self._predict_test_folder(grid.best_estimator_)
+
+    def _predict_test_folder(self, model):
+        """Predict labels for each subfolder in the selected test directory."""
+        test_folder = self.test_edit.text()
+        if not test_folder:
+            return
+
+        data = load_test_data(test_folder)
+        if data.empty:
+            self.results.append("No test data found.")
+            return
+
+        predictions = {}
+        for folder_name, group in data.groupby("folder"):
+            X_test = group.drop(columns=["folder", "source_file"])
+            preds = model.predict(X_test)
+            label = "fault" if preds.sum() > len(preds) / 2 else "normal"
+            predictions[folder_name] = label
+
+        html = [
+            "<h3>Test Folder Predictions</h3>",
+            "<table border='1' cellspacing='0' cellpadding='3'>",
+            "<tr><th>Folder</th><th>Predicted Label</th></tr>",
+        ]
+        for folder, label in predictions.items():
+            color = "red" if label == "fault" else "green"
+            html.append(
+                f"<tr><td>{folder}</td><td style='color:{color}'><b>{label}</b></td></tr>"
+            )
+        html.append("</table>")
+        self.results.append("".join(html))
