@@ -181,6 +181,35 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.resize(600, 500)
         dialog.exec_()
 
+    def _show_test_table(self):
+        """Display a table listing test files and their assigned labels."""
+        if not hasattr(self, "test_data") or self.test_data.empty:
+            return
+
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Test Data Labels")
+        layout = QtWidgets.QVBoxLayout(dialog)
+
+        table = QtWidgets.QTableWidget(dialog)
+        file_labels = (
+            self.test_data[["source_file", "label"]]
+            .drop_duplicates()
+            .reset_index(drop=True)
+        )
+        table.setColumnCount(2)
+        table.setHorizontalHeaderLabels(["File", "Label"])
+        table.setRowCount(len(file_labels))
+
+        for row, record in file_labels.iterrows():
+            table.setItem(row, 0, QtWidgets.QTableWidgetItem(record["source_file"]))
+            table.setItem(row, 1, QtWidgets.QTableWidgetItem(record["label"]))
+
+        table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        layout.addWidget(table)
+
+        dialog.resize(400, 300)
+        dialog.exec_()
+
     def select_train_folder(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Train Folder")
         if folder:
@@ -195,6 +224,12 @@ class MainWindow(QtWidgets.QMainWindow):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Test Folder")
         if folder:
             self.test_edit.setText(folder)
+            data, counts = load_and_label_data(folder, verbose=False)
+            self.test_data = data
+            self.results.append(
+                f"Loaded {counts['normal']} normal test files and {counts['fault']} fault test files."
+            )
+            self._show_test_table()
 
     def load_model(self):
         path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Model", filter="Model Files (*.bin *.pkl *.joblib)")
