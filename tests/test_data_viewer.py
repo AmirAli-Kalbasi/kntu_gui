@@ -30,3 +30,21 @@ def test_viewer_populates_list():
     text = viewer.file_list.item(0).text()
     assert 'file.mat' in text
     assert 'normal' in text
+
+
+def test_resize_event_refreshes_plot():
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    viewer = DataViewer()
+    df = pd.DataFrame({
+        'sample_num': [0, 1],
+        'Acc_X': [0, 1],
+        'source_file': ['file.mat', 'file.mat'],
+        'folder': ['f', 'f'],
+        'label': ['normal', 'normal']
+    })
+    viewer.data = df
+    viewer.populate_file_list()
+    viewer.file_list.setCurrentRow(0)
+    viewer.update_plot()
+    viewer._on_resize(None)
