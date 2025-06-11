@@ -81,6 +81,7 @@ class DataViewer(QtWidgets.QDialog):
         self.figure = plt.Figure(figsize=(5, 4))
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        self.canvas.mpl_connect("resize_event", self._on_resize)
 
         right = QtWidgets.QWidget()
         vbox = QtWidgets.QVBoxLayout(right)
@@ -166,4 +167,10 @@ class DataViewer(QtWidgets.QDialog):
                 )
         ax.set_xlabel("Sample")
         ax.legend()
+        self.figure.tight_layout()
         self.canvas.draw()
+
+    def _on_resize(self, event):
+        """Ensure axes adjust correctly when the window is resized."""
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
