@@ -102,8 +102,19 @@ def extract_features(df: pd.DataFrame, feature_list: list) -> pd.DataFrame:
             row.update(wavelet_features(group))
 
         if isinstance(keys, tuple):
-            # keys will be (folder, source_file)
-            row["folder"], row["source_file"] = keys
+            # ``pandas`` 2.x always returns tuples when ``group_cols`` is a list
+            # even if it only contains a single column.  Handle both the
+            # two-value case ``(folder, source_file)`` and the single value
+            # ``(source_file,)`` that older versions returned as a scalar.
+            if len(keys) == 2:
+                row["folder"], row["source_file"] = keys
+            elif len(keys) == 1:
+                row["source_file"] = keys[0]
+            else:
+                # Unexpected length, fallback to last element as the file name
+                row["source_file"] = keys[-1]
+                if len(keys) > 1:
+                    row["folder"] = keys[0]
         else:
             row["source_file"] = keys
         if "label" in group.columns:
