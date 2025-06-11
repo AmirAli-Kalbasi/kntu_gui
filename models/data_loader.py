@@ -127,9 +127,9 @@ def load_test_data(base_path):
 
         name = entry.lower()
         label = None
-        if name in {"positive", "fault"}:
+        if name in {"negative", "fault"}:
             label = "fault"
-        elif name in {"negative", "normal"}:
+        elif name in {"positive", "normal"}:
             label = "normal"
 
         for file in os.listdir(path):
