@@ -68,45 +68,56 @@ param_grids = {
     "DecisionTree": {
         "clf__max_depth": [3, 5, 10, None],
         "clf__min_samples_split": [2, 5, 10],
+        "clf__min_samples_leaf": [1, 2, 4],
     },
     "RandomForest": {
         "clf__n_estimators": [50, 100, 200],
         "clf__max_depth": [3, 5, 10, None],
         "clf__min_samples_split": [2, 5, 10],
+        "clf__max_features": ["sqrt", "log2", None],
     },
     "AdaBoost": {
         "clf__n_estimators": [50, 100, 200],
         "clf__learning_rate": [0.01, 0.1, 1.0],
+        "clf__algorithm": ["SAMME", "SAMME.R"],
     },
     "MLP": {
         "clf__hidden_layer_sizes": [(50,), (100,), (50, 50)],
         "clf__activation": ["relu", "tanh"],
         "clf__alpha": [0.0001, 0.001, 0.01],
+        "clf__learning_rate_init": [0.001, 0.01],
     },
     "SVM": {
         "clf__C": [0.1, 1, 10],
-        "clf__kernel": ["linear", "rbf"],
+        "clf__kernel": ["linear", "rbf", "poly"],
         "clf__gamma": ["scale", "auto"],
+        "clf__degree": [3, 5],
     },
     "GradientBoosting": {
         "clf__n_estimators": [100, 200],
         "clf__learning_rate": [0.01, 0.1, 0.2],
         "clf__max_depth": [3, 5, 7],
+        "clf__subsample": [0.8, 1.0],
     },
     "XGBoost": {
         "clf__n_estimators": [50, 100, 200],
         "clf__max_depth": [3, 5, 7],
         "clf__learning_rate": [0.01, 0.1, 0.2],
+        "clf__subsample": [0.8, 1.0],
+        "clf__colsample_bytree": [0.8, 1.0],
     },
     "LightGBM": {
         "clf__n_estimators": [50, 100, 200],
         "clf__max_depth": [3, 5, 7],
         "clf__learning_rate": [0.01, 0.1, 0.2],
+        "clf__num_leaves": [31, 63],
+        "clf__subsample": [0.8, 1.0],
     },
     "CatBoost": {
         "clf__iterations": [50, 100, 200],
         "clf__depth": [3, 5, 7],
         "clf__learning_rate": [0.01, 0.1, 0.2],
+        "clf__l2_leaf_reg": [1, 3, 5],
     },
 }
 

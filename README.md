@@ -3,7 +3,10 @@
 This project provides a simple PyQt based GUI skeleton for machine learning workflows.
 The interface allows users to select training and test folders, choose a model type
 from a list of common classifiers and load a pretrained model. Training logic now
-includes a basic grid search to tune hyperparameters for the selected model.
+includes a grid search to tune hyperparameters for the selected model. The search
+space was recently expanded with more options for each estimator so you can
+experiment with deeper trees, different SVM kernels and additional boosting
+settings.
 
 ## Structure
 
