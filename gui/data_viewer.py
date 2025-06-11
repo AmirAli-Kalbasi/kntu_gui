@@ -46,17 +46,30 @@ class DataViewer(QtWidgets.QDialog):
         layout.addLayout(sensor_layout)
 
         # File list and plot area
-        main = QtWidgets.QHBoxLayout()
+        splitter = QtWidgets.QSplitter()
+        splitter.setOrientation(QtCore.Qt.Horizontal)
+
         self.file_list = QtWidgets.QListWidget()
         self.file_list.currentItemChanged.connect(self.update_plot)
-        main.addWidget(self.file_list, 1)
+        splitter.addWidget(self.file_list)
 
-        from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+        from matplotlib.backends.backend_qt5agg import (
+            FigureCanvasQTAgg,
+            NavigationToolbar2QT,
+        )
 
         self.figure = plt.Figure(figsize=(5, 4))
         self.canvas = FigureCanvasQTAgg(self.figure)
-        main.addWidget(self.canvas, 3)
-        layout.addLayout(main)
+        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+
+        right = QtWidgets.QWidget()
+        vbox = QtWidgets.QVBoxLayout(right)
+        vbox.addWidget(self.toolbar)
+        vbox.addWidget(self.canvas)
+
+        splitter.addWidget(right)
+        splitter.setStretchFactor(1, 3)
+        layout.addWidget(splitter)
 
     def type_changed(self, text):
         """Update the displayed path and data when the type combo changes."""
