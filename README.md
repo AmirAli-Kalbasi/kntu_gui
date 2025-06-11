@@ -63,4 +63,6 @@ Use the **Visualize Data** button to explore sensor data before training. A new
 window lets you load either train or test folders. Select a file from the list
 and choose which sensors to plot to quickly inspect the raw signals. The viewer
 now includes the standard matplotlib toolbar so you can zoom or pan directly in
-the plot for a smoother exploration experience.
+the plot for a smoother exploration experience. The window can be resized and
+supports minimise/maximise buttons so you can view the plots full screen if
+needed.
