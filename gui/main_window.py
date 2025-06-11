@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, QtCore
 
 from models import load_and_label_data, load_test_data
 from features import extract_features
+from gui.data_viewer import DataViewer
 
 import logging
 import shutil
@@ -231,6 +232,11 @@ class MainWindow(QtWidgets.QMainWindow):
         train_model_btn.clicked.connect(self.train_model)
         layout.addWidget(train_model_btn)
 
+        # Data visualisation window
+        view_btn = QtWidgets.QPushButton("Visualize Data")
+        view_btn.clicked.connect(self.open_viewer)
+        layout.addWidget(view_btn)
+
         # Placeholder for results
         self.results = QtWidgets.QTextEdit()
         self.results.setReadOnly(True)
@@ -251,6 +257,11 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(canvas)
         dialog.resize(600, 500)
         dialog.exec_()
+
+    def open_viewer(self):
+        """Launch the :class:`DataViewer` dialog."""
+        viewer = DataViewer(self)
+        viewer.exec_()
 
     def select_train_folder(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Train Folder")
