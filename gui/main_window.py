@@ -4,8 +4,30 @@ from models import load_and_label_data, load_test_data
 from features import extract_features
 
 import logging
+import shutil
+import subprocess
 
 logger = logging.getLogger(__name__)
+
+
+def _gpu_available() -> bool:
+    """Return ``True`` if an NVIDIA GPU appears to be present."""
+    if shutil.which("nvidia-smi") is None:
+        return False
+    try:
+        result = subprocess.run(
+            ["nvidia-smi"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
+GPU_AVAILABLE = _gpu_available()
+if GPU_AVAILABLE:
+    logger.info("GPU detected, GPU-enabled models will run on GPU.")
+else:
+    logger.info("No GPU detected, running on CPU.")
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -52,15 +74,36 @@ classifiers = {
     ]),
     "XGBoost": Pipeline([
         ("scaler", StandardScaler()),
-        ("clf", XGBClassifier(use_label_encoder=False, eval_metric="logloss", random_state=42)),
+        (
+            "clf",
+            XGBClassifier(
+                use_label_encoder=False,
+                eval_metric="logloss",
+                random_state=42,
+                tree_method="gpu_hist" if GPU_AVAILABLE else "auto",
+            ),
+        ),
     ]),
     "LightGBM": Pipeline([
         ("scaler", StandardScaler()),
-        ("clf", LGBMClassifier(random_state=42)),
+        (
+            "clf",
+            LGBMClassifier(
+                random_state=42,
+                device="gpu" if GPU_AVAILABLE else "cpu",
+            ),
+        ),
     ]),
     "CatBoost": Pipeline([
         ("scaler", StandardScaler()),
-        ("clf", CatBoostClassifier(verbose=0, random_state=42)),
+        (
+            "clf",
+            CatBoostClassifier(
+                verbose=0,
+                random_state=42,
+                task_type="GPU" if GPU_AVAILABLE else "CPU",
+            ),
+        ),
     ]),
 }
 
@@ -234,6 +277,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if not train_folder:
             self.results.append("Please select a train folder.")
             return
+
+        if GPU_AVAILABLE:
+            self.results.append("Running on GPU for supported models.")
+        else:
+            self.results.append("Running on CPU.")
 
         data, _ = load_and_label_data(train_folder, verbose=False)
         if data.empty:
