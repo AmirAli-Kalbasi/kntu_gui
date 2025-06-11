@@ -248,6 +248,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         dialog = QtWidgets.QDialog(self)
         dialog.setWindowTitle("Confusion Matrix")
+        dialog.setWindowFlags(
+            dialog.windowFlags()
+            | QtCore.Qt.WindowMinimizeButtonHint
+            | QtCore.Qt.WindowMaximizeButtonHint
+        )
         layout = QtWidgets.QVBoxLayout(dialog)
 
         canvas = FigureCanvasQTAgg(fig)

@@ -12,6 +12,11 @@ class DataViewer(QtWidgets.QDialog):
     def __init__(self, parent=None, train_folder="", test_folder=""):
         super().__init__(parent)
         self.setWindowTitle("Data Viewer")
+        self.setWindowFlags(
+            self.windowFlags()
+            | QtCore.Qt.WindowMinimizeButtonHint
+            | QtCore.Qt.WindowMaximizeButtonHint
+        )
         self.resize(800, 600)
         self.data = pd.DataFrame()
         self.paths = {"Train": train_folder, "Test": test_folder}
