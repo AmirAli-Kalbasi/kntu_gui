@@ -260,7 +260,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_viewer(self):
         """Launch the :class:`DataViewer` dialog."""
-        viewer = DataViewer(self)
+        viewer = DataViewer(
+            self,
+            train_folder=self.train_edit.text(),
+            test_folder=self.test_edit.text(),
+        )
         viewer.exec_()
 
     def select_train_folder(self):

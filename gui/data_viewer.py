@@ -9,12 +9,14 @@ from features import SENSOR_COLS
 class DataViewer(QtWidgets.QDialog):
     """Simple window to visualise sensor data from train/test folders."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, train_folder="", test_folder=""):
         super().__init__(parent)
         self.setWindowTitle("Data Viewer")
         self.resize(800, 600)
         self.data = pd.DataFrame()
+        self.paths = {"Train": train_folder, "Test": test_folder}
         self._init_ui()
+        self.type_changed(self.type_combo.currentText())
 
     def _init_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
@@ -23,6 +25,7 @@ class DataViewer(QtWidgets.QDialog):
         controls = QtWidgets.QHBoxLayout()
         self.type_combo = QtWidgets.QComboBox()
         self.type_combo.addItems(["Train", "Test"])
+        self.type_combo.currentTextChanged.connect(self.type_changed)
         self.path_edit = QtWidgets.QLineEdit()
         select_btn = QtWidgets.QPushButton("Select Folder")
         select_btn.clicked.connect(self.select_folder)
@@ -55,16 +58,32 @@ class DataViewer(QtWidgets.QDialog):
         main.addWidget(self.canvas, 3)
         layout.addLayout(main)
 
-    def select_folder(self):
-        folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder")
+    def type_changed(self, text):
+        """Update the displayed path and data when the type combo changes."""
+        self.path_edit.setText(self.paths.get(text, ""))
+        self.load_current_data()
+
+    def load_current_data(self):
+        """Load data for the current folder if a path is set."""
+        folder = self.path_edit.text()
         if not folder:
+            self.data = pd.DataFrame()
+            self.populate_file_list()
             return
-        self.path_edit.setText(folder)
         if self.type_combo.currentText() == "Train":
             self.data, _ = load_and_label_data(folder, verbose=False)
         else:
             self.data = load_test_data(folder)
         self.populate_file_list()
+
+    def select_folder(self):
+        folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder")
+        if not folder:
+            return
+        current_type = self.type_combo.currentText()
+        self.paths[current_type] = folder
+        self.path_edit.setText(folder)
+        self.load_current_data()
 
     def populate_file_list(self):
         self.file_list.clear()
@@ -76,7 +95,12 @@ class DataViewer(QtWidgets.QDialog):
             group = self.data.groupby(["source_file"])
         for keys, g in group:
             if isinstance(keys, tuple):
-                folder, file = keys
+                if len(keys) == 2:
+                    folder, file = keys
+                elif len(keys) == 1:
+                    folder, file = "", keys[0]
+                else:
+                    folder, file = keys[0], keys[-1]
             else:
                 folder, file = "", keys
             label = g["label"].iloc[0] if "label" in g.columns else None
