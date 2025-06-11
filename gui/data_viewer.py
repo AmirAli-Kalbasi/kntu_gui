@@ -90,7 +90,10 @@ class DataViewer(QtWidgets.QDialog):
 
         splitter.addWidget(right)
         splitter.setStretchFactor(1, 3)
-        layout.addWidget(splitter)
+        layout.addWidget(splitter, 1)
+
+        # Ensure the splitter expands while controls keep minimal height
+        layout.setStretchFactor(splitter, 1)
 
     def type_changed(self, text):
         """Update the displayed path and data when the type combo changes."""
