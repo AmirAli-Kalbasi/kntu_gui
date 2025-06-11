@@ -7,6 +7,18 @@ import pywt
 
 SENSOR_COLS = ["Acc_X", "Acc_Y", "Acc_Z", "Gyro_X", "Gyro_Y", "Gyro_Z"]
 
+# Default colours for each sensor when visualising data.  Using a fixed
+# mapping ensures the check boxes and plot lines share the same colour
+# cues across the application.
+SENSOR_COLORS = {
+    "Acc_X": "#e6194b",  # red
+    "Acc_Y": "#3cb44b",  # green
+    "Acc_Z": "#4363d8",  # blue
+    "Gyro_X": "#f58231",  # orange
+    "Gyro_Y": "#911eb4",  # purple
+    "Gyro_Z": "#46f0f0",  # cyan
+}
+
 
 def time_domain_features(df_window: pd.DataFrame) -> dict:
     """Compute basic time-domain statistics for each sensor column."""

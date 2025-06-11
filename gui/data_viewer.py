@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from models import load_and_label_data, load_test_data
-from features import SENSOR_COLS
+from features import SENSOR_COLS, SENSOR_COLORS
 
 
 class DataViewer(QtWidgets.QDialog):
@@ -39,14 +39,29 @@ class DataViewer(QtWidgets.QDialog):
         controls.addWidget(select_btn)
         layout.addLayout(controls)
 
-        # Sensor check boxes
+        # Sensor check boxes with colour indicators
         sensor_layout = QtWidgets.QHBoxLayout()
         self.sensor_checks = {}
         for sensor in SENSOR_COLS:
             cb = QtWidgets.QCheckBox(sensor)
             cb.setChecked(True)
             cb.stateChanged.connect(self.update_plot)
-            sensor_layout.addWidget(cb)
+
+            colour = SENSOR_COLORS.get(sensor, "#000000")
+            indicator = QtWidgets.QLabel()
+            indicator.setFixedSize(12, 12)
+            indicator.setStyleSheet(
+                f"background-color: {colour}; border: 1px solid #000;"
+            )
+
+            wrapper = QtWidgets.QWidget()
+            w_layout = QtWidgets.QHBoxLayout(wrapper)
+            w_layout.setContentsMargins(2, 2, 2, 2)
+            w_layout.setSpacing(4)
+            w_layout.addWidget(indicator)
+            w_layout.addWidget(cb)
+
+            sensor_layout.addWidget(wrapper)
             self.sensor_checks[sensor] = cb
         layout.addLayout(sensor_layout)
 
@@ -142,7 +157,13 @@ class DataViewer(QtWidgets.QDialog):
         ax = self.figure.add_subplot(111)
         for sensor, cb in self.sensor_checks.items():
             if cb.isChecked() and sensor in df.columns:
-                ax.plot(df["sample_num"], df[sensor], label=sensor)
+                colour = SENSOR_COLORS.get(sensor, None)
+                ax.plot(
+                    df["sample_num"],
+                    df[sensor],
+                    label=sensor,
+                    color=colour,
+                )
         ax.set_xlabel("Sample")
         ax.legend()
         self.canvas.draw()
