@@ -8,6 +8,13 @@ def _make_mat(path):
     savemat(path, {"dataset": data})
 
 
+def _make_mat_with_header(path, headers):
+    data = np.empty((2, len(headers)), dtype=object)
+    data[0] = headers
+    data[1] = np.arange(len(headers))
+    savemat(path, {"dataset": data})
+
+
 def test_load_test_data_with_files_in_root(tmp_path):
     mat_path = tmp_path / "sample.mat"
     _make_mat(mat_path)
@@ -28,4 +35,16 @@ def test_load_test_data_with_labelled_folders(tmp_path):
 
     df = load_test_data(tmp_path)
     assert set(df["label"]) == {"normal", "fault"}
+
+
+def test_load_test_data_respects_header_row(tmp_path):
+    headers = ["time", "ax", "ay", "az", "gx", "gy", "gz"]
+    mat_path = tmp_path / "with_header.mat"
+    _make_mat_with_header(mat_path, headers)
+
+    df = load_test_data(tmp_path)
+
+    assert list(df.columns[: len(headers)]) == headers
+    # Ensure the header row was removed
+    assert df.iloc[0].tolist() == list(range(len(headers)))
 

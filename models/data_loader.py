@@ -1,9 +1,41 @@
 import os
 import logging
+import numpy as np
 import pandas as pd
 import scipy.io
 
 logger = logging.getLogger(__name__)
+
+
+DEFAULT_COLUMNS = [
+    "sample_num",
+    "Acc_X",
+    "Acc_Y",
+    "Acc_Z",
+    "Gyro_X",
+    "Gyro_Y",
+    "Gyro_Z",
+]
+
+
+def _dataframe_from_dataset(data_array):
+    """Create a DataFrame from a loaded ``dataset`` array.
+
+    The legacy format stores only numeric values. Some newer files ship the first
+    row as column headers; when detected those are used instead of the default
+    ``Acc``/``Gyro`` labels.
+    """
+
+    columns = DEFAULT_COLUMNS
+    values = data_array
+
+    if data_array.size:
+        first_row = np.asarray(data_array[0]).ravel()
+        if any(isinstance(item, str) for item in first_row):
+            columns = [str(item) for item in first_row]
+            values = data_array[1:]
+
+    return pd.DataFrame(values, columns=columns)
 
 
 def load_and_label_data(base_path, verbose=True):
@@ -53,18 +85,7 @@ def load_and_label_data(base_path, verbose=True):
                 mat_data = scipy.io.loadmat(file_path)
 
                 data_array = mat_data["dataset"]
-                df = pd.DataFrame(
-                    data_array,
-                    columns=[
-                        "sample_num",
-                        "Acc_X",
-                        "Acc_Y",
-                        "Acc_Z",
-                        "Gyro_X",
-                        "Gyro_Y",
-                        "Gyro_Z",
-                    ],
-                )
+                df = _dataframe_from_dataset(data_array)
                 df["label"] = label
                 df["source_file"] = file
                 data_frames.append(df)
@@ -104,18 +125,7 @@ def load_test_data(base_path):
         if os.path.isfile(path) and entry.endswith(".mat"):
             mat_data = scipy.io.loadmat(path)
             data_array = mat_data["dataset"]
-            df = pd.DataFrame(
-                data_array,
-                columns=[
-                    "sample_num",
-                    "Acc_X",
-                    "Acc_Y",
-                    "Acc_Z",
-                    "Gyro_X",
-                    "Gyro_Y",
-                    "Gyro_Z",
-                ],
-            )
+            df = _dataframe_from_dataset(data_array)
             df["folder"] = os.path.basename(base_path)
             df["source_file"] = entry
             data_frames.append(df)
@@ -138,18 +148,7 @@ def load_test_data(base_path):
                 mat_data = scipy.io.loadmat(file_path)
 
                 data_array = mat_data["dataset"]
-                df = pd.DataFrame(
-                    data_array,
-                    columns=[
-                        "sample_num",
-                        "Acc_X",
-                        "Acc_Y",
-                        "Acc_Z",
-                        "Gyro_X",
-                        "Gyro_Y",
-                        "Gyro_Z",
-                    ],
-                )
+                df = _dataframe_from_dataset(data_array)
                 df["folder"] = entry
                 df["source_file"] = file
                 if label is not None:
