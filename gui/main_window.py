@@ -1,4 +1,8 @@
 from PyQt5 import QtWidgets, QtCore
+from pathlib import Path
+
+import numpy as np
+from scipy.io import savemat
 
 from models import load_and_label_data, load_test_data
 from features import extract_features
@@ -237,6 +241,10 @@ class MainWindow(QtWidgets.QMainWindow):
         view_btn.clicked.connect(self.open_viewer)
         layout.addWidget(view_btn)
 
+        convert_btn = QtWidgets.QPushButton("Convert .DAT to .MAT")
+        convert_btn.clicked.connect(self.convert_dat_files)
+        layout.addWidget(convert_btn)
+
         # Placeholder for results
         self.results = QtWidgets.QTextEdit()
         self.results.setReadOnly(True)
@@ -271,6 +279,61 @@ class MainWindow(QtWidgets.QMainWindow):
             test_folder=self.test_edit.text(),
         )
         viewer.exec_()
+
+    def convert_dat_files(self):
+        """Convert selected .DAT files to .MAT after choosing a destination folder."""
+
+        input_files, _ = QtWidgets.QFileDialog.getOpenFileNames(
+            self,
+            "Select .DAT Files",
+            filter="DAT Files (*.dat *.DAT)",
+        )
+        if not input_files:
+            return
+
+        output_dir = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Select Output Folder"
+        )
+        if not output_dir:
+            self.results.append(
+                "DAT to MAT conversion cancelled: no destination folder selected."
+            )
+            return
+
+        successes = []
+        failures = []
+
+        for input_path in input_files:
+            try:
+                data = np.loadtxt(input_path)
+                if data.ndim != 2 or data.shape[1] < 13:
+                    raise ValueError("Not enough columns in the file.")
+
+                rows = data.shape[0]
+                pulse = np.zeros((rows, 7))
+                pulse[:, 0] = data[:, 0]
+
+                for j in range(1, 7):
+                    col_idx_1 = (j * 2) - 1
+                    col_idx_2 = col_idx_1 + 1
+                    pulse[:, j] = data[:, col_idx_1] + data[:, col_idx_2]
+
+                output_file = Path(output_dir) / f"{Path(input_path).stem}.mat"
+                savemat(output_file, {"Pulse": pulse})
+                successes.append(output_file.name)
+            except Exception as exc:  # pragma: no cover - user-facing feedback
+                failures.append(f"{Path(input_path).name}: {exc}")
+
+        if successes:
+            success_list = ", ".join(successes)
+            self.results.append(
+                f"Converted {len(successes)} file(s) to .MAT: {success_list}"
+            )
+        if failures:
+            failure_list = "; ".join(failures)
+            self.results.append(
+                f"Failed to convert {len(failures)} file(s): {failure_list}"
+            )
 
     def select_train_folder(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Train Folder")
